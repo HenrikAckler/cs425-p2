@@ -7,6 +7,7 @@ BUILD ?= test
 TEST_DIR ?= tests
 SRC_DIR ?= src
 BUILD_BASE_DIR ?= build
+GCOVR ?= ./.venv-gcovr/bin/gcovr
 
 # Flags for hardening and security
 # https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html
@@ -131,17 +132,12 @@ check:
 
 
 report:
-	@if [[ -e ./build/tests/$(APP_NAME)_t ]]; then \
-		./build/tests/$(APP_NAME)_t; \
-	else \
-		echo "Build the debug target first by running 'make test'."; \
-		exit 1; \
-	fi
+	$(MAKE) BUILD=test
 	./build/tests/$(APP_NAME)_t
 	mkdir -p ./build/report/html
 	mkdir -p ./build/report/txt
-	gcovr -r . --html --html-details --exclude-directories build/tests/harness --exclude '.*main\.c$$' --exclude '.*test\.c$$' -o ./build/report/html/coverage_report.html
-	gcovr -r . --txt                 --exclude-directories build/tests/harness --exclude '.*main\.c$$' --exclude '.*test\.c$$'
+	$(GCOVR) -r . --html --html-details --exclude-directories build/tests/harness --exclude '.*test\.c$$' -o ./build/report/html/coverage_report.html
+	$(GCOVR) -r . --txt --txt-metric branch --exclude-directories build/tests/harness --exclude '.*test\.c$$'
 
 
 help:
