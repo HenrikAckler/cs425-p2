@@ -64,7 +64,7 @@ make leak
 make leak-test
 ```
 
-`make report` requires `gcovr` and reports both line and branch coverage. The protocol tests reach 100% of executable lines and measured branches in `src/lab.c`, without excluding protocol logic. Integration tests use a fixed relay seed and verify the received file with `cmp`. IMPORTANT: the venv should be named `.venv-gcovr`.
+`make report` requires `gcovr` and reports both line and branch coverage. The protocol tests reach 100% of executable lines and measured branches in `src/lab.c`, without excluding protocol logic. Integration tests use a fixed relay seed and verify the received file with `cmp`. 
 
 Only untestable items (sys calls, their resulting failures, etc) are excluded from testing.
 

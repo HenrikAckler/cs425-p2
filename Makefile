@@ -7,7 +7,7 @@ BUILD ?= test
 TEST_DIR ?= tests
 SRC_DIR ?= src
 BUILD_BASE_DIR ?= build
-GCOVR ?= ./.venv-gcovr/bin/gcovr
+GCOVR ?= python -m gcovr
 
 # Flags for hardening and security
 # https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html
