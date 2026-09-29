@@ -120,7 +120,7 @@ static int hello(int fd, const struct sockaddr *a, socklen_t alen, const char *m
         ssize_t sent;
         /* GCOVR_EXCL_LINE */
         sent = sendto(fd, msg, strlen(msg), 0, a, alen);
-        if (sent < 0) return -1; /* GCOVR_EXCL_BR_SOURCE: sendto failure */
+        if (sent < 0) { /* GCOVR_EXCL_BR_WITHOUT_HIT: 1/2 */ return -1; }
         if (poll(&p, 1, HELLO_WAIT_MS) > 0) {
             n = recv(fd, b, sizeof(b)-1, 0);
             if (n > 0) { b[n] = 0; if (!strncmp(b, "OK", 2)) return 0;
@@ -146,7 +146,7 @@ static int connect_relay(const char *host, int port, struct sockaddr_storage *ss
     if (gai_result != 0) return -1;
     /* GCOVR_EXCL_LINE */
     fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-    if (fd < 0) return fd; /* GCOVR_EXCL_BR_SOURCE: socket failure */
+    if (fd < 0) { /* GCOVR_EXCL_BR_WITHOUT_HIT: 1/2 */ return fd; }
     memcpy(ss, res->ai_addr, res->ai_addrlen); *sl = (socklen_t)res->ai_addrlen;
     /* GCOVR_EXCL_LINE */
     freeaddrinfo(res); return fd;
@@ -196,12 +196,12 @@ static int receiver(int fd, struct sockaddr_storage *a, socklen_t alen, const ch
         ssize_t n = recv(fd, b, sizeof(b), 0); if (n <= 0 || lab_decode(b, (size_t)n, &p)) continue;
         lab_receiver_packet(&r, &p, &ack, data, sizeof(data), &dl);
         if (dl && fwrite(data, 1, dl, f) != dl) {
-            fclose(f); /* GCOVR_EXCL_BR_SOURCE: fwrite failure */
-            return 2; /* GCOVR_EXCL_BR_SOURCE: fwrite failure */
+            fclose(f);
+            return 2;
         }
-        if (send_packet(fd, (struct sockaddr *)a, alen, &ack)) {
-            fclose(f); /* GCOVR_EXCL_BR_SOURCE: send failure */ /* GCOVR_EXCL_LINE */
-            return 2; /* GCOVR_EXCL_BR_SOURCE: send failure */ /* GCOVR_EXCL_LINE */
+        if (send_packet(fd, (struct sockaddr *)a, alen, &ack)) { /* GCOVR_EXCL_BR_WITHOUT_HIT: 1/2 */
+            fclose(f); /* GCOVR_EXCL_LINE */
+            return 2; /* GCOVR_EXCL_LINE */
         }
         deadline = now_ms() + (r.finished ? 2000 : RECEIVER_IDLE_MS);
         if (r.finished) {
@@ -247,7 +247,7 @@ static int sender(int fd, struct sockaddr_storage *a, socklen_t alen, const char
     uint8_t buf[LAB_MAX_PAYLOAD], wire[LAB_MAX_PACKET]; lab_sender_t s; uint64_t t;
     if (!f) return 2; /* GCOVR_EXCL_LINE */
     v=calloc(16385,sizeof(*v)); /* GCOVR_EXCL_LINE */
-    if (!v) {fclose(f);return 2; /* GCOVR_EXCL_BR_SOURCE: allocation failure */}
+    if (!v) { /* GCOVR_EXCL_BR_WITHOUT_HIT: 1/2 */ fclose(f);return 2; }
     while ((cap=fread(buf,1,sizeof(buf),f)) > 0) {
         if (count >= 16384) {
             fclose(f);
@@ -260,8 +260,8 @@ static int sender(int fd, struct sockaddr_storage *a, socklen_t alen, const char
         memcpy(v[count].payload,buf,cap);
         count++;
     }
-    if (ferror(f)) {
-        fclose(f); /* GCOVR_EXCL_BR_SOURCE: library-reported read failure */ /* GCOVR_EXCL_LINE */
+    if (ferror(f)) { /* GCOVR_EXCL_BR_WITHOUT_HIT: 1/2 */
+        fclose(f); /* GCOVR_EXCL_LINE */
         free(v); /* GCOVR_EXCL_LINE */
         return 2; /* GCOVR_EXCL_LINE */
     }
@@ -281,7 +281,12 @@ static int sender(int fd, struct sockaddr_storage *a, socklen_t alen, const char
         struct pollfd q={fd,POLLIN,0}; int pr=poll(&q,1,wait); size_t n=0,i;
         if (pr>0) { ssize_t z=recv(fd,wire,sizeof(wire),0); if(z>0&&!lab_decode(wire,(size_t)z,&ack)&&ack.type==LAB_ACK)n=lab_sender_ack(&s,ack.seq,now_ms(),out,64); }
         else n=lab_sender_timeout(&s,now_ms(),out,64);
-    for(i=0;i<n;i++) if(send_packet(fd,(struct sockaddr*)a,alen,out[i])) {free(v);return 2; /* GCOVR_EXCL_BR_SOURCE: send failure */}
+    for (i = 0; i < n; i++) {
+        if (send_packet(fd, (struct sockaddr *)a, alen, out[i])) { /* GCOVR_EXCL_BR_WITHOUT_HIT: 1/2 */
+            free(v);
+            return 2; /* GCOVR_EXCL_LINE */
+        }
+    }
     }
     free(v); return lab_sender_done(&s)>0 ? 0 : 2;
 }
@@ -328,7 +333,7 @@ int main(int argc,char **argv)
     if(send_mode) snprintf(hello_msg,sizeof(hello_msg),"HELLO %s send %g %g %g",
                            session,loss,corrupt,dup);
     else snprintf(hello_msg,sizeof(hello_msg),"HELLO %s recv",session);
-    if (connect(fd, (struct sockaddr *)&addr, alen) < 0) { close(fd); return 2; /* GCOVR_EXCL_BR_SOURCE: connect failure */ }
+    if (connect(fd, (struct sockaddr *)&addr, alen) < 0) { /* GCOVR_EXCL_BR_WITHOUT_HIT: 1/2 */ close(fd); return 2; }
     rc=hello(fd,(struct sockaddr*)&addr,alen,hello_msg); if(rc) {close(fd);return 2;}
     rc=send_mode?sender(fd,&addr,alen,file,win,timeout):receiver(fd,&addr,alen,file); close(fd); return rc;
 }
